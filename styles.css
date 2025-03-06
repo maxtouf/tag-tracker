@@ -147,15 +147,28 @@ input:focus, select:focus {
     background-color: #2980b9;
 }
 
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
 .export-btn {
     background-color: #2ecc71;
     color: white;
-    display: block;
-    margin: 0 0 20px auto;
 }
 
 .export-btn:hover {
     background-color: #27ae60;
+}
+
+.import-btn {
+    background-color: #3498db;
+    color: white;
+}
+
+.import-btn:hover {
+    background-color: #2980b9;
 }
 
 .delete-btn {
@@ -163,6 +176,8 @@ input:focus, select:focus {
     color: #e74c3c;
     padding: 5px 10px;
     font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
 }
 
 .delete-btn:hover {
@@ -170,6 +185,10 @@ input:focus, select:focus {
 }
 
 /* Tableaux */
+.table-container {
+    overflow-x: auto;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -224,5 +243,9 @@ tbody tr:hover {
     
     .button-row {
         justify-content: center;
+    }
+    
+    .button-group {
+        flex-direction: column;
     }
 }

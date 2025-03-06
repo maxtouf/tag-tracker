@@ -79,6 +79,12 @@ h3 {
 }
 
 /* Formulaires */
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
 .form-row {
     display: flex;
     flex-wrap: wrap;
@@ -91,6 +97,11 @@ h3 {
     min-width: 200px;
     display: flex;
     flex-direction: column;
+}
+
+.button-row {
+    display: flex;
+    justify-content: flex-start;
 }
 
 label {
@@ -115,24 +126,6 @@ input:focus, select:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.form-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.button-row {
-    display: flex;
-    justify-content: flex-end;
-}
-
-/* Pour les écrans mobiles */
-@media (max-width: 768px) {
-    .button-row {
-        justify-content: center;
-    }
 }
 
 /* Boutons */
@@ -227,5 +220,9 @@ tbody tr:hover {
     
     .form-group {
         min-width: 100%;
+    }
+    
+    .button-row {
+        justify-content: center;
     }
 }

@@ -490,6 +490,494 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Réinitialiser le champ de fichier
             importFileInput.value = '';
+
+            // Ajoutez ce code à votre fichier script.js
+
+// Fonction pour créer un canvas personnalisé
+function createCustomCanvas() {
+  // Créer un conteneur pour le canvas
+  const canvasContainer = document.createElement('div');
+  canvasContainer.className = 'card';
+  canvasContainer.style.marginBottom = '20px';
+  
+  // Ajouter un titre
+  const title = document.createElement('h2');
+  title.textContent = 'Visualisation personnalisée';
+  canvasContainer.appendChild(title);
+  
+  // Créer le canvas
+  const canvas = document.createElement('canvas');
+  canvas.id = 'custom-canvas';
+  canvas.width = 800;
+  canvas.height = 400;
+  canvas.style.width = '100%';
+  canvas.style.height = 'auto';
+  canvas.style.border = '1px solid #ddd';
+  canvas.style.borderRadius = '4px';
+  canvasContainer.appendChild(canvas);
+  
+  // Ajouter des contrôles
+  const controls = document.createElement('div');
+  controls.className = 'form-row';
+  controls.style.marginTop = '10px';
+  
+  // Sélecteur de visualisation
+  const selectGroup = document.createElement('div');
+  selectGroup.className = 'form-group';
+  
+  const selectLabel = document.createElement('label');
+  selectLabel.textContent = 'Type de visualisation';
+  selectGroup.appendChild(selectLabel);
+  
+  const select = document.createElement('select');
+  select.id = 'viz-type';
+  
+  const options = [
+    { value: 'bubble', text: 'Diagramme à bulles' },
+    { value: 'timeline', text: 'Chronologie' },
+    { value: 'heatmap', text: 'Carte de chaleur (heures/jours)' }
+  ];
+  
+  options.forEach(opt => {
+    const option = document.createElement('option');
+    option.value = opt.value;
+    option.textContent = opt.text;
+    select.appendChild(option);
+  });
+  
+  selectGroup.appendChild(select);
+  controls.appendChild(selectGroup);
+  
+  // Bouton pour redessiner
+  const buttonGroup = document.createElement('div');
+  buttonGroup.className = 'form-group';
+  buttonGroup.style.display = 'flex';
+  buttonGroup.style.alignItems = 'flex-end';
+  
+  const drawButton = document.createElement('button');
+  drawButton.className = 'btn primary-btn';
+  drawButton.textContent = 'Redessiner';
+  drawButton.onclick = function() {
+    drawCustomVisualization(select.value);
+  };
+  
+  buttonGroup.appendChild(drawButton);
+  controls.appendChild(buttonGroup);
+  
+  canvasContainer.appendChild(controls);
+  
+  // Insérer le canvas dans le DOM (avant le dernier élément)
+  const container = document.querySelector('.container');
+  container.insertBefore(canvasContainer, container.lastElementChild);
+  
+  // Dessiner la visualisation initiale
+  setTimeout(() => {
+    drawCustomVisualization('bubble');
+  }, 500);
+  
+  return canvas;
+}
+
+// Fonction pour dessiner la visualisation personnalisée
+function drawCustomVisualization(type) {
+  const canvas = document.getElementById('custom-canvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Styles de base
+  const colors = {
+    'QAE KO': '#3498db',  // Bleu
+    'QAS KO': '#2ecc71',  // Vert
+    'INJ': '#f39c12'      // Orange
+  };
+  
+  // Obtenir les données
+  const data = filteredTags || allTags || [];
+  
+  if (data.length === 0) {
+    // Afficher un message si aucune donnée
+    ctx.fillStyle = '#7f8c8d';
+    ctx.font = '20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Aucune donnée disponible pour cette période', canvas.width / 2, canvas.height / 2);
+    return;
+  }
+  
+  // Dessiner selon le type sélectionné
+  switch (type) {
+    case 'bubble':
+      drawBubbleChart(ctx, data, colors, canvas.width, canvas.height);
+      break;
+    case 'timeline':
+      drawTimeline(ctx, data, colors, canvas.width, canvas.height);
+      break;
+    case 'heatmap':
+      drawHeatmap(ctx, data, colors, canvas.width, canvas.height);
+      break;
+  }
+}
+
+// Dessiner un diagramme à bulles
+function drawBubbleChart(ctx, data, colors, width, height) {
+  // Regrouper par type
+  const groupedByType = {};
+  
+  data.forEach(tag => {
+    if (!groupedByType[tag.type]) {
+      groupedByType[tag.type] = 0;
+    }
+    groupedByType[tag.type]++;
+  });
+  
+  const padding = 50;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const maxRadius = Math.min(width, height) / 3;
+  
+  // Dessiner le titre
+  ctx.fillStyle = '#2c3e50';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Répartition des tags par type', centerX, padding / 2);
+  
+  // Calculer le rayon max en fonction du nombre max de tags
+  const maxCount = Math.max(...Object.values(groupedByType));
+  
+  // Positions des bulles
+  const positions = [
+    { x: centerX - maxRadius/2, y: centerY },
+    { x: centerX + maxRadius/2, y: centerY },
+    { x: centerX, y: centerY + maxRadius/2 }
+  ];
+  
+  // Dessiner les bulles
+  let i = 0;
+  for (const type in groupedByType) {
+    if (groupedByType.hasOwnProperty(type)) {
+      const count = groupedByType[type];
+      const radius = (count / maxCount) * maxRadius / 2 + maxRadius / 4;
+      
+      // Dessiner le cercle
+      ctx.beginPath();
+      ctx.arc(positions[i].x, positions[i].y, radius, 0, 2 * Math.PI);
+      ctx.fillStyle = colors[type] + '80';  // Ajouter transparence
+      ctx.fill();
+      ctx.strokeStyle = colors[type];
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Dessiner le texte
+      ctx.fillStyle = '#2c3e50';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(type, positions[i].x, positions[i].y - 5);
+      ctx.font = '20px sans-serif';
+      ctx.fillText(count, positions[i].x, positions[i].y + 20);
+      
+      i++;
+    }
+  }
+  
+  // Dessiner la légende
+  const legendY = height - padding / 2;
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('La taille des bulles représente le nombre de tags', centerX, legendY);
+}
+
+// Dessiner une chronologie
+function drawTimeline(ctx, data, colors, width, height) {
+  // Trier les données par date
+  const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+  
+  const padding = 50;
+  const timelineY = height / 2;
+  const timelineWidth = width - 2 * padding;
+  
+  // Obtenir la date min et max
+  const dateMin = new Date(sortedData[0].date);
+  const dateMax = new Date(sortedData[sortedData.length - 1].date);
+  const totalDays = Math.ceil((dateMax - dateMin) / (1000 * 60 * 60 * 24)) + 1;
+  
+  // Dessiner le titre
+  ctx.fillStyle = '#2c3e50';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Chronologie des tags', width / 2, padding / 2);
+  
+  // Dessiner la ligne de temps
+  ctx.beginPath();
+  ctx.moveTo(padding, timelineY);
+  ctx.lineTo(width - padding, timelineY);
+  ctx.strokeStyle = '#95a5a6';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Dessiner les graduations et dates
+  const markCount = Math.min(totalDays, 10);
+  const markSpace = timelineWidth / markCount;
+  
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#7f8c8d';
+  ctx.font = '12px sans-serif';
+  
+  for (let i = 0; i <= markCount; i++) {
+    const x = padding + i * markSpace;
+    
+    // Graduation
+    ctx.beginPath();
+    ctx.moveTo(x, timelineY - 5);
+    ctx.lineTo(x, timelineY + 5);
+    ctx.stroke();
+    
+    // Date
+    if (i % 2 === 0 || markCount <= 5) {
+      const date = new Date(dateMin);
+      date.setDate(date.getDate() + Math.floor(i * totalDays / markCount));
+      ctx.fillText(date.toLocaleDateString('fr-FR'), x, timelineY + 20);
+    }
+  }
+  
+  // Dessiner les points de données
+  const getXPosition = (date) => {
+    const days = (new Date(date) - dateMin) / (1000 * 60 * 60 * 24);
+    return padding + (days / totalDays) * timelineWidth;
+  };
+  
+  // Regrouper les événements par jour et type
+  const eventsByDay = {};
+  
+  sortedData.forEach(tag => {
+    const dateStr = new Date(tag.date).toLocaleDateString('fr-FR');
+    if (!eventsByDay[dateStr]) {
+      eventsByDay[dateStr] = {
+        'QAE KO': 0,
+        'QAS KO': 0,
+        'INJ': 0,
+        date: new Date(tag.date)
+      };
+    }
+    eventsByDay[dateStr][tag.type]++;
+  });
+  
+  // Dessiner les points sur la timeline
+  Object.values(eventsByDay).forEach(dayData => {
+    const x = getXPosition(dayData.date);
+    let offsetY = 0;
+    
+    for (const type in colors) {
+      if (dayData[type] > 0) {
+        // Dessiner un cercle
+        const count = dayData[type];
+        const radius = Math.min(Math.max(count * 3, 5), 15);
+        
+        ctx.beginPath();
+        ctx.arc(x, timelineY - 15 - offsetY, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = colors[type] + '80';
+        ctx.fill();
+        ctx.strokeStyle = colors[type];
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // Ajouter le nombre
+        ctx.fillStyle = '#2c3e50';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(count, x, timelineY - 15 - offsetY + 3);
+        
+        offsetY += radius * 2 + 5;
+      }
+    }
+    
+    // Ligne de connexion
+    ctx.beginPath();
+    ctx.moveTo(x, timelineY - 5);
+    ctx.lineTo(x, timelineY - 15);
+    ctx.strokeStyle = '#95a5a6';
+    ctx.stroke();
+  });
+  
+  // Légende
+  const legendY = height - padding / 2;
+  ctx.font = '12px sans-serif';
+  
+  let legendX = width / 4;
+  for (const type in colors) {
+    // Carré de couleur
+    ctx.fillStyle = colors[type];
+    ctx.fillRect(legendX - 40, legendY - 8, 12, 12);
+    
+    // Texte
+    ctx.fillStyle = '#2c3e50';
+    ctx.textAlign = 'left';
+    ctx.fillText(type, legendX - 25, legendY);
+    
+    legendX += width / 4;
+  }
+}
+
+// Dessiner une carte de chaleur
+function drawHeatmap(ctx, data, colors, width, height) {
+  const padding = 60;
+  const heatmapWidth = width - 2 * padding;
+  const heatmapHeight = height - 2 * padding;
+  
+  // Définir les dimensions de la grille
+  const daysOfWeek = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  const hoursOfDay = Array.from({ length: 24 }, (_, i) => `${i}h`);
+  
+  const cellWidth = heatmapWidth / hoursOfDay.length;
+  const cellHeight = heatmapHeight / daysOfWeek.length;
+  
+  // Dessiner le titre
+  ctx.fillStyle = '#2c3e50';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Répartition des tags par heure et jour de la semaine', width / 2, padding / 2);
+  
+  // Préparer les données pour la heatmap
+  const heatmapData = {};
+  
+  daysOfWeek.forEach((day, dayIndex) => {
+    heatmapData[dayIndex] = {};
+    hoursOfDay.forEach((_, hourIndex) => {
+      heatmapData[dayIndex][hourIndex] = {
+        'QAE KO': 0,
+        'QAS KO': 0,
+        'INJ': 0,
+        total: 0
+      };
+    });
+  });
+  
+  // Remplir les données
+  data.forEach(tag => {
+    const date = new Date(tag.date);
+    const day = date.getDay();
+    const hour = date.getHours();
+    
+    heatmapData[day][hour][tag.type]++;
+    heatmapData[day][hour].total++;
+  });
+  
+  // Trouver la valeur maximale pour l'échelle de couleur
+  let maxValue = 0;
+  Object.values(heatmapData).forEach(dayData => {
+    Object.values(dayData).forEach(hourData => {
+      maxValue = Math.max(maxValue, hourData.total);
+    });
+  });
+  
+  // Dessiner la grille et les cellules
+  for (let day = 0; day < daysOfWeek.length; day++) {
+    for (let hour = 0; hour < hoursOfDay.length; hour++) {
+      const x = padding + hour * cellWidth;
+      const y = padding + day * cellHeight;
+      
+      // Dessiner la cellule
+      const cellData = heatmapData[day][hour];
+      const intensity = maxValue > 0 ? cellData.total / maxValue : 0;
+      
+      // Choisir la couleur principale
+      let cellColor = '#f1f1f1';  // Couleur par défaut (gris clair)
+      
+      if (cellData.total > 0) {
+        // Trouver le type le plus fréquent
+        const maxType = Object.keys(colors).reduce((a, b) => 
+          cellData[a] > cellData[b] ? a : b
+        );
+        
+        // Mélanger avec le blanc selon l'intensité
+        const baseColor = colors[maxType];
+        const r = parseInt(baseColor.slice(1, 3), 16);
+        const g = parseInt(baseColor.slice(3, 5), 16);
+        const b = parseInt(baseColor.slice(5, 7), 16);
+        
+        const blendR = Math.floor(r * intensity + 241 * (1 - intensity));
+        const blendG = Math.floor(g * intensity + 241 * (1 - intensity));
+        const blendB = Math.floor(b * intensity + 241 * (1 - intensity));
+        
+        cellColor = `rgb(${blendR}, ${blendG}, ${blendB})`;
+      }
+      
+      ctx.fillStyle = cellColor;
+      ctx.fillRect(x, y, cellWidth, cellHeight);
+      
+      // Bordure de cellule
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, cellWidth, cellHeight);
+      
+      // Afficher le nombre si > 0
+      if (cellData.total > 0) {
+        ctx.fillStyle = intensity > 0.7 ? '#fff' : '#2c3e50';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(cellData.total, x + cellWidth/2, y + cellHeight/2 + 3);
+      }
+    }
+  }
+  
+  // Dessiner les étiquettes
+  ctx.fillStyle = '#2c3e50';
+  ctx.font = '12px sans-serif';
+  
+  // Étiquettes des jours
+  for (let day = 0; day < daysOfWeek.length; day++) {
+    const y = padding + day * cellHeight + cellHeight / 2 + 4;
+    ctx.textAlign = 'right';
+    ctx.fillText(daysOfWeek[day], padding - 10, y);
+  }
+  
+  // Étiquettes des heures
+  for (let hour = 0; hour < hoursOfDay.length; hour += 4) {
+    const x = padding + hour * cellWidth + cellWidth / 2;
+    ctx.textAlign = 'center';
+    ctx.fillText(hoursOfDay[hour], x, padding - 10);
+  }
+  
+  // Légende
+  const legendY = height - 15;
+  ctx.font = '12px sans-serif';
+  
+  let legendX = width / 4;
+  for (const type in colors) {
+    // Carré de couleur
+    ctx.fillStyle = colors[type];
+    ctx.fillRect(legendX - 40, legendY - 8, 12, 12);
+    
+    // Texte
+    ctx.fillStyle = '#2c3e50';
+    ctx.textAlign = 'left';
+    ctx.fillText(type, legendX - 25, legendY);
+    
+    legendX += width / 4;
+  }
+}
+
+// Ajouter au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+  // Ajouter un délai pour s'assurer que tout est chargé
+  setTimeout(() => {
+    // Créer le canvas personnalisé
+    createCustomCanvas();
+    
+    // Ajouter un écouteur pour mettre à jour le canvas quand les filtres changent
+    const dateFilterSelect = document.getElementById('date-filter');
+    if (dateFilterSelect) {
+      const originalOnChange = dateFilterSelect.onchange;
+      dateFilterSelect.onchange = function(e) {
+        if (originalOnChange) originalOnChange.call(this, e);
+        setTimeout(() => {
+          const vizType = document.getElementById('viz-type');
+          if (vizType) drawCustomVisualization(vizType.value);
+        }, 100);
+      };
+    }
+  }, 1000);
+});
         };
         reader.readAsText(file);
     }

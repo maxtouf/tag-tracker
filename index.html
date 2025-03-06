@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suivi des Tags d'Appels</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Suivi des Tags d'Appels</h1>
+        
+        <!-- Formulaire d'ajout de tag -->
+        <div class="card">
+            <h2>Ajouter un nouveau tag</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="tag-type">Type de tag</label>
+                    <select id="tag-type">
+                        <option value="">Sélectionner un type</option>
+                        <option value="QAE KO">QAE KO - Qualité appel entrant KO</option>
+                        <option value="QAS KO">QAS KO - Qualité appel sortant KO</option>
+                        <option value="INJ">INJ - Client qui n'arrive pas à nous joindre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="tag-notes">Notes (optionnel)</label>
+                    <input type="text" id="tag-notes" placeholder="Détails additionnels">
+                </div>
+                <div class="form-group">
+                    <button id="add-tag-btn" class="btn primary-btn">Ajouter</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filtres de date -->
+        <div class="card">
+            <h2>Filtrer par période</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <select id="date-filter">
+                        <option value="all">Toutes les périodes</option>
+                        <option value="today">Aujourd'hui</option>
+                        <option value="week">Cette semaine</option>
+                        <option value="month">Ce mois</option>
+                        <option value="custom">Période personnalisée</option>
+                    </select>
+                </div>
+            </div>
+            <div id="custom-date-container" class="form-row" style="display: none;">
+                <div class="form-group">
+                    <input type="date" id="date-start">
+                </div>
+                <div class="date-separator">à</div>
+                <div class="form-group">
+                    <input type="date" id="date-end">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistiques -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>QAE KO</h3>
+                <p class="stat-description">Qualité appel entrant KO</p>
+                <p id="qae-count" class="stat-value">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>QAS KO</h3>
+                <p class="stat-description">Qualité appel sortant KO</p>
+                <p id="qas-count" class="stat-value">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>INJ</h3>
+                <p class="stat-description">Client qui n'arrive pas à nous joindre</p>
+                <p id="inj-count" class="stat-value">0</p>
+            </div>
+        </div>
+        
+        <!-- Graphiques (à implementer avec Chart.js) -->
+        <div class="charts-container">
+            <div class="chart-card">
+                <h3>Répartition par type</h3>
+                <div class="chart-container">
+                    <canvas id="pie-chart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Évolution par jour</h3>
+                <div class="chart-container">
+                    <canvas id="bar-chart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Liste des tags -->
+        <div class="card">
+            <h2>Liste des tags (<span id="tag-count">0</span>)</h2>
+            <div id="tags-table-container">
+                <table id="tags-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tags-body">
+                        <!-- Les tags seront ajoutés ici dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+            <p id="no-tags-message" class="empty-message">Aucun tag trouvé pour cette période.</p>
+        </div>
+        
+        <!-- Bouton d'exportation -->
+        <button id="export-btn" class="btn export-btn">Exporter les données (JSON)</button>
+    </div>
+
+    <!-- Chargement des scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -20,6 +20,7 @@ const COLORS = [
 // Éléments DOM
 document.addEventListener('DOMContentLoaded', function() {
     // Récupération des éléments du formulaire
+    const tagForm = document.getElementById('tag-form');
     const tagTypeSelect = document.getElementById('tag-type');
     const tagNotesInput = document.getElementById('tag-notes');
     const addTagBtn = document.getElementById('add-tag-btn');
@@ -37,20 +38,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const tagCountElement = document.getElementById('tag-count');
     const noTagsMessage = document.getElementById('no-tags-message');
     const exportBtn = document.getElementById('export-btn');
-
-    // Définir "Aujourd'hui" comme filtre par défaut
-document.addEventListener('DOMContentLoaded', function() {
-    // Code existant...
-    
-    // Définir le filtre par défaut sur "Aujourd'hui"
-    const dateFilterSelect = document.getElementById('date-filter');
-    dateFilterSelect.value = 'today';
-    // Déclencher l'événement change pour appliquer le filtre
-    const event = new Event('change');
-    dateFilterSelect.dispatchEvent(event);
-    
-    // Reste du code...
-});
     
     // Initialisation des graphiques
     initCharts();
@@ -58,8 +45,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // Chargement des tags du stockage local
     loadTags();
     
+    // Définir "Aujourd'hui" comme filtre par défaut
+    dateFilterSelect.value = 'today';
+    // Déclencher l'événement change pour appliquer le filtre
+    const event = new Event('change');
+    dateFilterSelect.dispatchEvent(event);
+    
     // Événements des formulaires
-    addTagBtn.addEventListener('click', addTag);
+    tagForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // Empêcher le formulaire de se soumettre normalement
+        addTag();
+    });
+    
+    addTagBtn.addEventListener('click', function(e) {
+        e.preventDefault(); // Empêcher le bouton de soumettre le formulaire
+        addTag();
+    });
+    
+    // Ajouter l'événement keydown sur le champ de notes
+    tagNotesInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addTag();
+        }
+    });
     
     dateFilterSelect.addEventListener('change', () => {
         if (dateFilterSelect.value === 'custom') {
@@ -107,6 +116,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Réinitialiser le formulaire
         tagTypeSelect.value = '';
         tagNotesInput.value = '';
+        
+        // Remettre le focus sur le select pour ajouter un autre tag rapidement
+        tagTypeSelect.focus();
     }
     
     function deleteTag(id) {
@@ -336,13 +348,3 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Convertir en format pour le graphique
         const sortedDates = Object.keys(tagsByDate).sort((a, b) => {
-            return new Date(a.split('/').reverse().join('-')) - new Date(b.split('/').reverse().join('-'));
-        });
-        
-        barChart.data.labels = sortedDates;
-        barChart.data.datasets[0].data = sortedDates.map(date => tagsByDate[date]['QAE KO']);
-        barChart.data.datasets[1].data = sortedDates.map(date => tagsByDate[date]['QAS KO']);
-        barChart.data.datasets[2].data = sortedDates.map(date => tagsByDate[date]['INJ']);
-        barChart.update();
-    }
-});

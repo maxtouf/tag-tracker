@@ -37,6 +37,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const tagCountElement = document.getElementById('tag-count');
     const noTagsMessage = document.getElementById('no-tags-message');
     const exportBtn = document.getElementById('export-btn');
+
+    // Définir "Aujourd'hui" comme filtre par défaut
+document.addEventListener('DOMContentLoaded', function() {
+    // Code existant...
+    
+    // Définir le filtre par défaut sur "Aujourd'hui"
+    const dateFilterSelect = document.getElementById('date-filter');
+    dateFilterSelect.value = 'today';
+    // Déclencher l'événement change pour appliquer le filtre
+    const event = new Event('change');
+    dateFilterSelect.dispatchEvent(event);
+    
+    // Reste du code...
+});
     
     // Initialisation des graphiques
     initCharts();

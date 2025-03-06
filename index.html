@@ -43,7 +43,7 @@
                     <select id="date-filter">
                         <option value="all">Toutes les périodes</option>
                         <option value="today">Aujourd'hui</option>
-                        <option value="week">Cette semaine</option>
+                        <option value="week" selected>Cette semaine</option>
                         <option value="month">Ce mois</option>
                         <option value="custom">Période personnalisée</option>
                     </select>
@@ -97,9 +97,9 @@
         
         <!-- Liste des tags -->
         <div class="card">
-            <h2>Liste des tags (<span id="tag-count">0</span>)</h2>
-            <div id="tags-table-container">
-                <table id="tags-table">
+            <h2>Liste des tags (<span class="liste-tags-count">0</span>)</h2>
+            <div class="table-container">
+                <table class="tags-table">
                     <thead>
                         <tr>
                             <th>Date</th>
@@ -113,23 +113,19 @@
                     </tbody>
                 </table>
             </div>
-            <p id="no-tags-message" class="empty-message">Aucun tag trouvé pour cette période.</p>
+            <p id="no-tags-message" class="empty-message" style="display: none;">Aucun tag trouvé pour cette période.</p>
         </div>
         
-        <!-- Bouton d'exportation -->
-        <button id="export-btn" class="btn export-btn">Exporter les données (JSON)</button>
+        <!-- Boutons d'exportation/importation -->
+        <div class="button-group">
+            <button id="export-btn" class="btn export-btn">Exporter les données (JSON)</button>
+            <button id="import-btn" class="btn import-btn">Importer des données</button>
+            <input type="file" id="import-file" accept=".json" style="display: none;">
+        </div>
     </div>
 
     <!-- Chargement des scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
-    <!-- Supabase Client -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.7.1"></script>
-<!-- Configuration -->
-<script>
-  const supabaseUrl = 'https://rvxemlcxrnopajsplkal.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2eGVtbGN4cm5vcGFqc3Bsa2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyOTc1MjEsImV4cCI6MjA1Njg3MzUyMX0.9Ur3oiBFn3uAAkJi9kesiASryQHeF9Mtt-tf9ut3Efo';
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-</script>
 </body>
 </html>

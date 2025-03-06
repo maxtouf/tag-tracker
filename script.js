@@ -22,190 +22,177 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("DOM chargé, initialisation de l'application");
     
     // Récupération des éléments du formulaire
-    const tagForm = document.querySelector('form') || document.createElement('form');
-    const tagTypeSelect = document.getElementById('tag-type') || document.querySelector('select');
-    const tagNotesInput = document.getElementById('tag-notes') || document.querySelector('input[type="text"]');
-    const addButton = document.querySelector('button');
-    const dateFilterSelect = document.getElementById('date-filter') || document.querySelectorAll('select')[1];
+    const tagForm = document.getElementById('tag-form');
+    const tagTypeSelect = document.getElementById('tag-type');
+    const tagNotesInput = document.getElementById('tag-notes');
+    const addTagBtn = document.getElementById('add-tag-btn');
+    const dateFilterSelect = document.getElementById('date-filter');
+    const customDateContainer = document.getElementById('custom-date-container');
+    const dateStartInput = document.getElementById('date-start');
+    const dateEndInput = document.getElementById('date-end');
+    const exportBtn = document.getElementById('export-btn');
+    const importBtn = document.getElementById('import-btn');
+    const importFileInput = document.getElementById('import-file');
     
     // Récupération des éléments d'affichage
-    const qaeCountElement = document.querySelector('#qae-count') || document.querySelectorAll('h3 + p + p')[0];
-    const qasCountElement = document.querySelector('#qas-count') || document.querySelectorAll('h3 + p + p')[1];
-    const injCountElement = document.querySelector('#inj-count') || document.querySelectorAll('h3 + p + p')[2];
-    const tagCountElement = document.querySelector('.liste-tags-count') || document.querySelector('h2 span');
-    const tagsTableBody = document.querySelector('#tags-body') || document.querySelector('table tbody');
+    const qaeCountElement = document.getElementById('qae-count');
+    const qasCountElement = document.getElementById('qas-count');
+    const injCountElement = document.getElementById('inj-count');
+    const tagCountElement = document.querySelector('.liste-tags-count');
+    const tagsTableBody = document.getElementById('tags-body');
+    const noTagsMessage = document.getElementById('no-tags-message');
     
-    console.log("Éléments récupérés:", {
-        tagTypeSelect, tagNotesInput, addButton, dateFilterSelect,
-        qaeCountElement, qasCountElement, injCountElement, tagCountElement, tagsTableBody
-    });
+    console.log("Éléments récupérés");
     
-    // Charger Chart.js s'il n'est pas déjà chargé
-    if (typeof Chart === 'undefined') {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-        script.onload = function() {
-            console.log("Chart.js chargé avec succès");
-            initCharts();
-            loadTags();
-        };
-        document.head.appendChild(script);
-    } else {
-        initCharts();
-        loadTags();
-    }
+    // Initialiser les graphiques
+    initCharts();
     
-    // Ajouter un événement au formulaire ou au bouton
-    if (addButton) {
-        addButton.addEventListener('click', function(e) {
+    // Charger les tags du stockage local
+    loadTags();
+    
+    // Ajouter un événement au formulaire
+    if (tagForm) {
+        tagForm.addEventListener('submit', function(e) {
             e.preventDefault();
             addTag();
         });
     }
     
-    // Filtrage par date (si le sélecteur existe)
-    if (dateFilterSelect) {
-        dateFilterSelect.addEventListener('change', filterTags);
+    // Ajouter un événement au bouton ajouter (au cas où)
+    if (addTagBtn) {
+        addTagBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            addTag();
+        });
     }
     
-    // Initialiser les graphiques
+    // Gestion de la touche Entrée dans le champ de notes
+    if (tagNotesInput) {
+        tagNotesInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addTag();
+            }
+        });
+    }
+    
+    // Filtrage par date
+    if (dateFilterSelect) {
+        dateFilterSelect.addEventListener('change', function() {
+            if (dateFilterSelect.value === 'custom') {
+                customDateContainer.style.display = 'flex';
+            } else {
+                customDateContainer.style.display = 'none';
+            }
+            filterTags();
+        });
+    }
+    
+    if (dateStartInput) {
+        dateStartInput.addEventListener('change', filterTags);
+    }
+    
+    if (dateEndInput) {
+        dateEndInput.addEventListener('change', filterTags);
+    }
+    
+    // Exportation/Importation
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportData);
+    }
+    
+    if (importBtn && importFileInput) {
+        importBtn.addEventListener('click', function() {
+            importFileInput.click();
+        });
+        
+        importFileInput.addEventListener('change', importData);
+    }
+    
+    // Fonction pour initialiser les graphiques
     function initCharts() {
         try {
             console.log("Initialisation des graphiques");
             
             // Graphique camembert (répartition par type)
-            const pieCanvas = document.getElementById('pie-chart');
-            if (pieCanvas) {
-                const pieCtx = pieCanvas.getContext('2d');
-                pieChart = new Chart(pieCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: Object.keys(TAG_TYPES),
-                        datasets: [{
-                            data: [0, 0, 0],
-                            backgroundColor: COLORS,
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right'
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.raw || 0;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                        return `${label}: ${value} (${percentage}%)`;
-                                    }
+            const pieCtx = document.getElementById('pie-chart').getContext('2d');
+            pieChart = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(TAG_TYPES),
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: COLORS,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return `${label}: ${value} (${percentage}%)`;
                                 }
                             }
                         }
                     }
-                });
-            } else {
-                console.log("Canvas pour le graphique camembert non trouvé, création...");
-                createPieChartCanvas();
-            }
+                }
+            });
             
             // Graphique à barres (évolution par jour)
-            const barCanvas = document.getElementById('bar-chart');
-            if (barCanvas) {
-                const barCtx = barCanvas.getContext('2d');
-                barChart = new Chart(barCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: [],
-                        datasets: [
-                            {
-                                label: 'QAE KO',
-                                data: [],
-                                backgroundColor: COLORS[0],
-                                borderWidth: 1
-                            },
-                            {
-                                label: 'QAS KO',
-                                data: [],
-                                backgroundColor: COLORS[1],
-                                borderWidth: 1
-                            },
-                            {
-                                label: 'INJ',
-                                data: [],
-                                backgroundColor: COLORS[2],
-                                borderWidth: 1
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: {
-                                stacked: false
-                            },
-                            y: {
-                                stacked: false,
-                                beginAtZero: true
-                            }
+            const barCtx = document.getElementById('bar-chart').getContext('2d');
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'QAE KO',
+                            data: [],
+                            backgroundColor: COLORS[0],
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'QAS KO',
+                            data: [],
+                            backgroundColor: COLORS[1],
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'INJ',
+                            data: [],
+                            backgroundColor: COLORS[2],
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: false
+                        },
+                        y: {
+                            stacked: false,
+                            beginAtZero: true
                         }
                     }
-                });
-            } else {
-                console.log("Canvas pour le graphique à barres non trouvé, création...");
-                createBarChartCanvas();
-            }
+                }
+            });
             
             console.log("Graphiques initialisés avec succès");
         } catch (error) {
             console.error("Erreur lors de l'initialisation des graphiques:", error);
-        }
-    }
-    
-    // Créer le canvas pour le graphique camembert si nécessaire
-    function createPieChartCanvas() {
-        const pieChartContainer = document.querySelector('.chart-container') || 
-                                 document.querySelector('[id^="repartition"]') || 
-                                 document.querySelectorAll('.chart-card')[0] ||
-                                 document.querySelectorAll('.card')[3];
-        
-        if (pieChartContainer) {
-            const canvas = document.createElement('canvas');
-            canvas.id = 'pie-chart';
-            canvas.style.width = '100%';
-            canvas.style.height = '300px';
-            pieChartContainer.appendChild(canvas);
-            
-            // Réinitialiser le graphique
-            setTimeout(() => {
-                initCharts();
-            }, 100);
-        }
-    }
-    
-    // Créer le canvas pour le graphique à barres si nécessaire
-    function createBarChartCanvas() {
-        const barChartContainer = document.querySelector('.chart-container:nth-child(2)') || 
-                                 document.querySelector('[id^="evolution"]') || 
-                                 document.querySelectorAll('.chart-card')[1] ||
-                                 document.querySelectorAll('.card')[4];
-        
-        if (barChartContainer) {
-            const canvas = document.createElement('canvas');
-            canvas.id = 'bar-chart';
-            canvas.style.width = '100%';
-            canvas.style.height = '300px';
-            barChartContainer.appendChild(canvas);
-            
-            // Réinitialiser le graphique
-            setTimeout(() => {
-                initCharts();
-            }, 100);
         }
     }
     
@@ -258,6 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Réinitialiser le formulaire
         tagTypeSelect.value = '';
         tagNotesInput.value = '';
+        tagTypeSelect.focus();
         
         console.log("Tag ajouté, nombre total:", allTags.length);
     }
@@ -271,19 +259,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Supprimer un tag
     function deleteTag(id) {
         console.log("Suppression du tag avec ID:", id);
-        allTags = allTags.filter(tag => tag.id !== id);
-        saveTags();
-        filterTags();
+        
+        if (confirm("Êtes-vous sûr de vouloir supprimer ce tag ?")) {
+            allTags = allTags.filter(tag => tag.id !== id);
+            saveTags();
+            filterTags();
+        }
     }
     
     // Filtrer les tags selon la période sélectionnée
     function filterTags() {
-        if (!dateFilterSelect) {
-            filteredTags = [...allTags];
-            updateUI();
-            return;
-        }
-        
         const filter = dateFilterSelect.value;
         console.log("Filtrage des tags avec le filtre:", filter);
         
@@ -302,6 +287,18 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (filter === 'month' || filter === 'Ce mois') {
                 const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
                 filteredTags = allTags.filter(tag => new Date(tag.date) >= startOfMonth);
+            } else if (filter === 'custom' || filter === 'Période personnalisée') {
+                if (dateStartInput.value && dateEndInput.value) {
+                    const start = new Date(dateStartInput.value);
+                    const end = new Date(dateEndInput.value);
+                    end.setHours(23, 59, 59, 999);
+                    filteredTags = allTags.filter(tag => {
+                        const tagDate = new Date(tag.date);
+                        return tagDate >= start && tagDate <= end;
+                    });
+                } else {
+                    filteredTags = [...allTags];
+                }
             } else {
                 filteredTags = [...allTags];
             }
@@ -321,26 +318,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log("Mise à jour des compteurs", { qaeCount, qasCount, injCount });
         
-        if (qaeCountElement) qaeCountElement.textContent = qaeCount;
-        if (qasCountElement) qasCountElement.textContent = qasCount;
-        if (injCountElement) injCountElement.textContent = injCount;
+        qaeCountElement.textContent = qaeCount;
+        qasCountElement.textContent = qasCount;
+        injCountElement.textContent = injCount;
         
         // Mettre à jour le compteur dans le titre de la liste
-        if (tagCountElement) {
-            tagCountElement.textContent = `(${filteredTags.length})`;
-        } else {
-            // Trouver le titre de la liste des tags et ajuster le compteur
-            const listeTitles = document.querySelectorAll('h2');
-            listeTitles.forEach(title => {
-                if (title.textContent.includes('Liste des tags')) {
-                    if (title.querySelector('span')) {
-                        title.querySelector('span').textContent = `(${filteredTags.length})`;
-                    } else {
-                        title.textContent = `Liste des tags (${filteredTags.length})`;
-                    }
-                }
-            });
-        }
+        tagCountElement.textContent = filteredTags.length;
         
         // Mettre à jour la table des tags
         updateTagsTable();
@@ -348,27 +331,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Mettre à jour la table des tags
     function updateTagsTable() {
-        if (!tagsTableBody) {
-            console.warn("Corps de table non trouvé");
-            return;
-        }
-        
         // Vider la table
         tagsTableBody.innerHTML = '';
         
         // Si aucun tag filtré, afficher un message
         if (filteredTags.length === 0) {
-            const emptyRow = document.createElement('tr');
-            const emptyCell = document.createElement('td');
-            emptyCell.colSpan = 4;
-            emptyCell.textContent = 'Aucun tag pour la période sélectionnée';
-            emptyCell.style.textAlign = 'center';
-            emptyCell.style.padding = '20px';
-            emptyCell.style.fontStyle = 'italic';
-            emptyRow.appendChild(emptyCell);
-            tagsTableBody.appendChild(emptyRow);
+            noTagsMessage.style.display = 'block';
             return;
         }
+        
+        noTagsMessage.style.display = 'none';
         
         // Trier les tags par date (plus récent en premier)
         const sortedTags = [...filteredTags].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -396,11 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const actionsCell = document.createElement('td');
             const deleteButton = document.createElement('button');
             deleteButton.textContent = 'Supprimer';
-            deleteButton.className = 'btn delete-btn';
-            deleteButton.style.color = '#e74c3c';
-            deleteButton.style.background = 'none';
-            deleteButton.style.border = 'none';
-            deleteButton.style.cursor = 'pointer';
+            deleteButton.className = 'delete-btn';
             deleteButton.onclick = () => deleteTag(tag.id);
             actionsCell.appendChild(deleteButton);
             row.appendChild(actionsCell);
@@ -411,11 +379,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Mettre à jour les graphiques
     function updateCharts() {
-        if (!pieChart || !barChart) {
-            console.warn("Graphiques non initialisés");
-            return;
-        }
-        
         try {
             // Mise à jour du graphique camembert
             const pieData = [
@@ -481,5 +444,53 @@ document.addEventListener('DOMContentLoaded', function() {
             hour: '2-digit',
             minute: '2-digit'
         });
+    }
+    
+    // Exporter les données en JSON
+    function exportData() {
+        const dataStr = JSON.stringify(allTags, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = `tags-appels-${new Date().toLocaleDateString('fr-FR')}.json`;
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    }
+    
+    // Importer des données
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedTags = JSON.parse(e.target.result);
+                
+                // Vérifier si les données sont valides
+                if (!Array.isArray(importedTags)) {
+                    throw new Error("Format de données invalide");
+                }
+                
+                // Fusionner avec les tags existants (éviter les doublons par ID)
+                const existingIds = allTags.map(tag => tag.id);
+                const newTags = importedTags.filter(tag => !existingIds.includes(tag.id));
+                
+                allTags = [...allTags, ...newTags];
+                saveTags();
+                filterTags();
+                
+                alert(`${newTags.length} tags importés avec succès.`);
+            } catch (error) {
+                console.error("Erreur lors de l'importation:", error);
+                alert("Erreur lors de l'importation du fichier. Assurez-vous qu'il s'agit d'un fichier JSON valide.");
+            }
+            
+            // Réinitialiser le champ de fichier
+            importFileInput.value = '';
+        };
+        reader.readAsText(file);
     }
 });

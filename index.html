@@ -11,30 +11,29 @@
         <h1>Suivi des Tags d'Appels</h1>
         
         <!-- Formulaire d'ajout de tag -->
-       
-<div class="card">
-    <h2>Ajouter un nouveau tag</h2>
-    <div class="form-container">
-        <div class="form-row">
-            <div class="form-group">
-                <label for="tag-type">Type de tag</label>
-                <select id="tag-type">
-                    <option value="">Sélectionner un type</option>
-                    <option value="QAE KO">QAE KO - Qualité appel entrant KO</option>
-                    <option value="QAS KO">QAS KO - Qualité appel sortant KO</option>
-                    <option value="INJ">INJ - Client qui n'arrive pas à nous joindre</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="tag-notes">Notes (optionnel)</label>
-                <input type="text" id="tag-notes" placeholder="Détails additionnels">
-            </div>
+        <div class="card">
+            <h2>Ajouter un nouveau tag</h2>
+            <form id="tag-form" class="form-container">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tag-type">Type de tag</label>
+                        <select id="tag-type">
+                            <option value="">Sélectionner un type</option>
+                            <option value="QAE KO">QAE KO - Qualité appel entrant KO</option>
+                            <option value="QAS KO">QAS KO - Qualité appel sortant KO</option>
+                            <option value="INJ">INJ - Client qui n'arrive pas à nous joindre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="tag-notes">Notes (optionnel)</label>
+                        <input type="text" id="tag-notes" placeholder="Détails additionnels">
+                    </div>
+                </div>
+                <div class="button-row">
+                    <button type="submit" id="add-tag-btn" class="btn primary-btn">Ajouter</button>
+                </div>
+            </form>
         </div>
-        <div class="button-row">
-            <button id="add-tag-btn" class="btn primary-btn">Ajouter</button>
-        </div>
-    </div>
-</div>
         
         <!-- Filtres de date -->
         <div class="card">
@@ -80,7 +79,7 @@
             </div>
         </div>
         
-        <!-- Graphiques (à implementer avec Chart.js) -->
+        <!-- Graphiques -->
         <div class="charts-container">
             <div class="chart-card">
                 <h3>Répartition par type</h3>

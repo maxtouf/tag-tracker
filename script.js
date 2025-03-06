@@ -1,3 +1,4 @@
+```javascript
 // Modèle de données pour les tags
 let allTags = [];
 let filteredTags = [];
@@ -17,7 +18,7 @@ const COLORS = [
     '#f39c12'   // Orange pour INJ
 ];
 
-// Éléments DOM
+// Initialisation après chargement du DOM
 document.addEventListener('DOMContentLoaded', function() {
     // Récupération des éléments du formulaire
     const tagForm = document.getElementById('tag-form');
@@ -47,9 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Définir "Aujourd'hui" comme filtre par défaut
     dateFilterSelect.value = 'today';
-    // Déclencher l'événement change pour appliquer le filtre
-    const event = new Event('change');
-    dateFilterSelect.dispatchEvent(event);
+    filterTags(); // Appliquer le filtre immédiatement
     
     // Événements des formulaires
     tagForm.addEventListener('submit', function(e) {
@@ -57,12 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
         addTag();
     });
     
-    addTagBtn.addEventListener('click', function(e) {
-        e.preventDefault(); // Empêcher le bouton de soumettre le formulaire
-        addTag();
-    });
-    
-    // Ajouter l'événement keydown sur le champ de notes
+    // Gestion de la touche Entrée dans le champ de notes
     tagNotesInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -83,24 +77,15 @@ document.addEventListener('DOMContentLoaded', function() {
     dateEndInput.addEventListener('change', filterTags);
     exportBtn.addEventListener('click', exportData);
     
-    // Initialisation des fonctions
-    function loadTags() {
-        const savedTags = localStorage.getItem('callTags');
-        if (savedTags) {
-            allTags = JSON.parse(savedTags);
-        }
-        filterTags();
-    }
-    
-    function saveTags() {
-        localStorage.setItem('callTags', JSON.stringify(allTags));
-    }
-    
+    // Fonction pour ajouter un tag
     function addTag() {
         const type = tagTypeSelect.value;
         const notes = tagNotesInput.value;
         
-        if (!type) return;
+        if (!type) {
+            alert("Veuillez sélectionner un type de tag");
+            return;
+        }
         
         const newTag = {
             id: Date.now(),
@@ -121,12 +106,33 @@ document.addEventListener('DOMContentLoaded', function() {
         tagTypeSelect.focus();
     }
     
+    // Charger les tags du stockage local
+    function loadTags() {
+        const savedTags = localStorage.getItem('callTags');
+        if (savedTags) {
+            try {
+                allTags = JSON.parse(savedTags);
+            } catch (e) {
+                console.error("Erreur lors du chargement des tags:", e);
+                allTags = [];
+            }
+        }
+        filterTags();
+    }
+    
+    // Sauvegarder les tags dans le stockage local
+    function saveTags() {
+        localStorage.setItem('callTags', JSON.stringify(allTags));
+    }
+    
+    // Supprimer un tag
     function deleteTag(id) {
         allTags = allTags.filter(tag => tag.id !== id);
         saveTags();
         filterTags();
     }
     
+    // Filtrer les tags selon la période sélectionnée
     function filterTags() {
         const filter = dateFilterSelect.value;
         
@@ -162,6 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCharts();
     }
     
+    // Mettre à jour l'interface utilisateur
     function updateUI() {
         // Mettre à jour les compteurs
         qaeCountElement.textContent = countTagsByType('QAE KO');
@@ -214,10 +221,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Compter les tags par type
     function countTagsByType(type) {
         return filteredTags.filter(tag => tag.type === type).length;
     }
     
+    // Formater la date pour l'affichage
     function formatDate(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('fr-FR', { 
@@ -229,6 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Exporter les données
     function exportData() {
         const dataStr = JSON.stringify(filteredTags, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -241,6 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
         linkElement.click();
     }
     
+    // Initialiser les graphiques
     function initCharts() {
         // Graphique camembert (répartition par type)
         const pieCtx = document.getElementById('pie-chart').getContext('2d');
@@ -319,6 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Mettre à jour les graphiques
     function updateCharts() {
         // Mise à jour du graphique camembert
         const pieData = [
@@ -348,3 +360,24 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Convertir en format pour le graphique
         const sortedDates = Object.keys(tagsByDate).sort((a, b) => {
+            return new Date(a.split('/').reverse().join('-')) - new Date(b.split('/').reverse().join('-'));
+        });
+        
+        barChart.data.labels = sortedDates;
+        barChart.data.datasets[0].data = sortedDates.map(date => tagsByDate[date]['QAE KO']);
+        barChart.data.datasets[1].data = sortedDates.map(date => tagsByDate[date]['QAS KO']);
+        barChart.data.datasets[2].data = sortedDates.map(date => tagsByDate[date]['INJ']);
+        barChart.update();
+    }
+});
+```
+
+Principales corrections apportées :
+
+1. J'ai retiré l'écouteur d'événement en double sur le bouton "Ajouter" qui pouvait causer des conflits.
+2. J'ai simplifié la gestion des événements pour ne garder que l'écouteur sur le formulaire (submit) et sur la touche Entrée.
+3. J'ai ajouté une alerte lorsqu'aucun type n'est sélectionné.
+4. J'ai amélioré la gestion des erreurs dans la fonction `loadTags()`.
+5. J'ai ajouté l'appel direct à `filterTags()` après avoir défini "Aujourd'hui" comme valeur par défaut.
+
+Ces modifications devraient permettre de résoudre le problème et vous pourrez à nouveau ajouter des tags. Vous devriez pouvoir faire la validation soit en cliquant sur le bouton "Ajouter", soit en appuyant sur la touche Entrée.

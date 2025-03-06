@@ -117,6 +117,24 @@ input:focus, select:focus {
     justify-content: center;
 }
 
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.button-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Pour les écrans mobiles */
+@media (max-width: 768px) {
+    .button-row {
+        justify-content: center;
+    }
+}
+
 /* Boutons */
 .btn {
     padding: 10px 15px;
